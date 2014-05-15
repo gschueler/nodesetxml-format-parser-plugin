@@ -1,0 +1,37 @@
+buildscript {
+   repositories {
+      mavenCentral()
+      maven { url "https://oss.sonatype.org/content/groups/public"}
+   }
+   dependencies {
+      classpath 'com.github.townsfolk:gradle-release:1.2'
+   }
+}
+apply plugin: 'release'
+apply plugin: 'java'
+apply plugin: 'idea'
+sourceCompatibility = 1.5
+defaultTasks 'clean', 'build'
+ext.rundeckPluginVersion = '1.1'
+version="1.0"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+dependencies {
+    compile group: 'dom4j', name: 'dom4j', version: '1.6.1'
+    compile group: 'org.rundeck', name: 'rundeck-core', version: '2.1.1'
+}
+
+jar {
+    //include contents of output dir
+    manifest {
+        attributes 'Rundeck-Plugin-Version': rundeckPluginVersion, 'Rundeck-Plugin-Archive': 'true'
+        attributes 'Rundeck-Plugin-Classnames': 'org.rundeck.plugins.resourceparser.NodesetResourceFormatParser'
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.10'
+}
