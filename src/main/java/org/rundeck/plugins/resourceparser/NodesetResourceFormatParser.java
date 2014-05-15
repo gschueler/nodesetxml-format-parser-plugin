@@ -78,19 +78,19 @@ public class NodesetResourceFormatParser implements ResourceFormatParser {
         if (!rootElement.getName().equals("nodeset")) {
             throw new ResourceFormatParserException("nodesetxml format error: root element should be 'nodeset'");
         }
-        parseNodeSetElement(rootElement, allnodes);
-        List<NodeSet> sets = parseNodeSets(rootElement, allnodes);
-        fillNodes(allnodes, sets, iNodeEntries);
+
+        NodeSet rootSet = parseNodeSetElement(rootElement, allnodes);
+        parseSubNodeSets(rootElement, allnodes, rootSet);
+        fillNodes(allnodes, iNodeEntries);
         return iNodeEntries;
     }
 
     /**
      * Fill defined nodes into the NodeSetImpl
      *
-     * @param sets
      * @param iNodeEntries
      */
-    private void fillNodes(List<NodeItem> allnodes, List<NodeSet> sets, NodeSetImpl iNodeEntries) {
+    private void fillNodes(List<NodeItem> allnodes, NodeSetImpl iNodeEntries) {
         for (NodeItem allnode : allnodes) {
             String name = allnode.attributes.get("name");
             NodeEntryImpl nodeEntry = new NodeEntryImpl(name);
@@ -99,7 +99,7 @@ public class NodesetResourceFormatParser implements ResourceFormatParser {
             ArrayList<NodeItem> parents = new ArrayList<NodeItem>();
             NodeItem parent = allnode.parent;
             while (parent != null) {
-                parents.add(0,parent);//unshift
+                parents.add(0, parent);//unshift
                 parent = parent.parent;
             }
             //iterate from top down
@@ -160,12 +160,16 @@ public class NodesetResourceFormatParser implements ResourceFormatParser {
         }
 
         //now process sub nodesets
+        parseSubNodeSets(nodesetelem, allnodes, nodeSet);
+        return nodeSet;
+    }
+
+    private void parseSubNodeSets(Element nodesetelem, List<NodeItem> allnodes, NodeSet nodeSet) {
         List<NodeSet> nodeSets = parseNodeSets(nodesetelem, allnodes);
         for (NodeSet set : nodeSets) {
             set.parent = nodeSet;
             nodeSet.subsets.add(set);
         }
-        return nodeSet;
     }
 
     /**
@@ -181,7 +185,7 @@ public class NodesetResourceFormatParser implements ResourceFormatParser {
             Attribute attr = (Attribute) o;
             if (!"tags".equals(attr.getName())) {
                 nodeItem.attributes.put(attr.getName(), attr.getValue());
-            }else{
+            } else {
                 nodeItem.tags.addAll(tagString(attr.getValue()));
             }
         }
@@ -192,7 +196,7 @@ public class NodesetResourceFormatParser implements ResourceFormatParser {
             Attribute name = attr.attribute("name");
             Attribute value = attr.attribute("value");
             if (null != name && null != value) {
-                if(!"tags".equals(name.getValue())){
+                if (!"tags".equals(name.getValue())) {
                     nodeItem.attributes.put(name.getValue(), value.getValue());
                 } else {
                     nodeItem.tags.addAll(tagString(value.getValue()));
